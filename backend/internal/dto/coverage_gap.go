@@ -13,6 +13,35 @@ type GapTransitionRequest struct {
 	ReviewNote      string `json:"review_note" binding:"required,min=8,max=600"`
 }
 
+type ResurveyPlanRequest struct {
+	GapIDs []uint `json:"gap_ids" binding:"required,min=2,max=50,dive,gt=0"`
+}
+
+type ResurveyTaskView struct {
+	Order                int     `json:"order"`
+	GapID                uint    `json:"gap_id"`
+	SurveyAreaID         uint    `json:"survey_area_id"`
+	AreaCode             string  `json:"area_code"`
+	Severity             string  `json:"severity"`
+	AreaSquareM          float64 `json:"area_square_m"`
+	RecommendedLineM     float64 `json:"recommended_line_m"`
+	GapState             string  `json:"gap_state"`
+	DetectedAt           string  `json:"detected_at"`
+	AlgorithmVersion     string  `json:"algorithm_version"`
+	SortRationale        string  `json:"sort_rationale"`
+}
+
+type ResurveyPlanView struct {
+	SurveyAreaID         uint               `json:"survey_area_id"`
+	AreaCode             string             `json:"area_code"`
+	TaskCount            int                `json:"task_count"`
+	TotalGapAreaSquareM  float64            `json:"total_gap_area_square_m"`
+	TotalLineLengthM     float64            `json:"total_line_length_m"`
+	SortingPolicy        string             `json:"sorting_policy"`
+	PlanFingerprint      string             `json:"plan_fingerprint"`
+	Tasks                []ResurveyTaskView `json:"tasks"`
+}
+
 type CoverageGapQuery struct {
 	SurveyAreaID uint
 	State        string

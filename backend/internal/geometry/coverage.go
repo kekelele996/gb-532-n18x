@@ -109,6 +109,35 @@ func ParseLines(data []byte) ([]orb.LineString, error) {
 	return lines, nil
 }
 
+func ParseLineFeature(data []byte) ([]orb.LineString, error) {
+	feature, err := geojson.UnmarshalFeature(data)
+	if err != nil {
+		return nil, fmt.Errorf("%w: parse line feature: %v", ErrInvalidGeometry, err)
+	}
+	switch geometry := feature.Geometry.(type) {
+	case orb.LineString:
+		if len(geometry) < 2 {
+			return nil, fmt.Errorf("%w: line needs at least two positions", ErrInvalidGeometry)
+		}
+		return []orb.LineString{geometry}, nil
+	case orb.MultiLineString:
+		if len(geometry) == 0 {
+			return nil, fmt.Errorf("%w: at least one line is required", ErrInvalidGeometry)
+		}
+		return []orb.LineString(geometry), nil
+	default:
+		return nil, fmt.Errorf("%w: expected LineString or MultiLineString feature", ErrInvalidGeometry)
+	}
+}
+
+func FeatureLineLength(data []byte) (float64, error) {
+	lines, err := ParseLineFeature(data)
+	if err != nil {
+		return 0, err
+	}
+	return TrackLength(lines), nil
+}
+
 func PolygonArea(polygon orb.Polygon) float64 {
 	if len(polygon) == 0 {
 		return 0

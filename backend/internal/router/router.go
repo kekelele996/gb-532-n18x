@@ -62,6 +62,7 @@ func New(log *slog.Logger, auth *service.AuthService, handlers Handlers) *gin.En
 	protected.GET("/coverage-gaps", handlers.Coverage.List)
 	protected.GET("/coverage-gaps/:id", handlers.Coverage.Get)
 	protected.POST("/coverage-gaps/detect", coverageLimit.Middleware("coverage-detect"), middleware.RBAC(constants.RoleAdmin, constants.RoleDataProcessor), handlers.Coverage.Detect)
+	protected.POST("/coverage-gaps/resurvey-plan", middleware.RBAC(constants.RoleAdmin, constants.RoleReviewer), handlers.Coverage.ResurveyPlan)
 	protected.POST("/coverage-gaps/:id/transition", middleware.RBAC(constants.RoleReviewer), handlers.Coverage.Transition)
 
 	protected.GET("/audits", middleware.RBAC(constants.RoleAdmin, constants.RoleReviewer, constants.RoleAuditor), handlers.Audit.List)

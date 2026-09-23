@@ -90,10 +90,20 @@ database/init.sql        PostGIS 扩展初始化
 | POST | `/runs/:id/transition` | 推进运行状态机 |
 | GET | `/coverage-gaps`、`/coverage-gaps/:id` | 缺口快照列表与详情 |
 | POST | `/coverage-gaps/detect` | 覆盖计算，要求 `Idempotency-Key` |
+| POST | `/coverage-gaps/resurvey-plan` | 多快照补测任务单（只读，reviewer/admin） |
 | POST | `/coverage-gaps/:id/transition` | reviewer 人工复核 |
 | GET | `/audits` | 审计筛选 |
 
 错误响应统一包含业务 `code`、`message`、可选 `details` 和 `request_id`。无效 GeoJSON/坐标系返回 422，非法状态或版本冲突返回 409，认证与权限分别返回 401/403。
+
+### 多快照补测调度
+
+在 `/coverage` 页勾选同一测区两条以上 `detected`（待复核）或 `reviewed`（已复核）快照后，可调用 `POST /api/v1/coverage-gaps/resurvey-plan` 生成只读补测任务单：
+
+- 任务顺序按 严重度降序（critical > major > minor）→ 缺口面积降序 → 发现时间升序 → 快照 ID 升序 稳定排列，每条任务返回中文 `sort_rationale` 排序理由。
+- 任务单汇总 `total_gap_area_square_m`（缺口面积合计）与 `total_line_length_m`（建议补测线长度合计），并给出仅依赖快照集合的 `plan_fingerprint`；相同集合重复生成结果一致。
+- 整次拒绝（HTTP 422）的情形：重复快照 `RESURVEY_SELECTION_DUPLICATE`、快照不存在 `RESURVEY_SELECTION_NOT_FOUND`、跨测区 `RESURVEY_SELECTION_MULTI_AREA`、含已关闭或其他非待复核/已复核状态 `RESURVEY_SELECTION_STATE_INVALID`；少于两条由参数校验返回 400。拒绝时不写库、不迁移状态，原快照保持不变。
+- 该端点为只读规划，不产生审计写操作；RBAC 允许 `admin` 与 `reviewer`，`auditor`/`data_processor` 等角色返回 403。
 
 ## 共享枚举位置
 
