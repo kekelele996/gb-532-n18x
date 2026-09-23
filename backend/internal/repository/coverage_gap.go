@@ -44,6 +44,14 @@ func (r *CoverageGapRepository) Get(id uint) (model.CoverageGap, error) {
 	return item, nil
 }
 
+func (r *CoverageGapRepository) ByIDs(ids []uint) ([]model.CoverageGap, error) {
+	var items []model.CoverageGap
+	if err := r.db.Where("id IN ?", ids).Find(&items).Error; err != nil {
+		return nil, fmt.Errorf("get coverage gaps: %w", err)
+	}
+	return items, nil
+}
+
 func (r *CoverageGapRepository) ByInputHash(hash string) (model.CoverageGap, error) {
 	var item model.CoverageGap
 	if err := r.db.Where("input_hash = ?", hash).First(&item).Error; err != nil {

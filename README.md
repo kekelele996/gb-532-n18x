@@ -12,6 +12,7 @@ docker compose up -d --build
 - 测线：从测区生成平行测线，锁定执行版本，复制形成后续草稿。
 - 航迹：导入 GeoJSON，检查采样点、长度、航速与导航质量，按状态机处理。
 - 覆盖：以固定网格估算覆盖、重复覆盖和漏测，冻结输入哈希并生成补测线建议。
+- 补测调度：勾选同一测区两条以上待复核或已复核快照，按严重度、缺口面积、发现时间排序生成任务单，汇总缺口面积与建议线长度；跨测区、已关闭或重复快照整次拒绝且原快照不变，相同快照集合重复生成结果一致。
 - 审计：记录四类实体写操作的前后快照、操作者、角色、request ID 和算法元数据。
 
 ## 角色与账号
@@ -35,7 +36,7 @@ docker compose up -d --build
 | `/areas` | SurveyArea、TransectPlan | 创建投影测区、查看覆盖摘要和边界 |
 | `/plans` | TransectPlan、SurveyArea | 生成平行测线、锁定或复制版本 |
 | `/runs` | SonarRun、TransectPlan | 导入航迹、读取质量证据、推进处理状态 |
-| `/coverage` | CoverageGap、SonarRun、SurveyArea | 计算覆盖、查看缺口与补测线、人工复核 |
+| `/coverage` | CoverageGap、SonarRun、SurveyArea | 计算覆盖、查看缺口与补测线、人工复核、多选快照生成补测任务单 |
 | `/audit` | 四实体审计投影 | 按 request ID、实体和操作者筛选 |
 
 所有页面通过 `/api/v1` 读取真实数据。二维测绘画布使用本地 Canvas，不依赖在线地图或第三方瓦片服务。
@@ -182,6 +183,7 @@ docker compose down -v --remove-orphans
 - `VERSION_CONFLICT`：数据已被其他人员更新，刷新列表后按新版本重试。
 - `RUN_TRANSITION_INVALID`：必须依次完成质量检查、处理和已处理状态。
 - `RUN_NOT_PROCESSED`：覆盖计算只能选择已处理且属于同一测区的运行。
+- `RESURVEY_GAP_DUPLICATED` / `RESURVEY_AREA_MISMATCH` / `RESURVEY_STATE_INVALID`：补测任务单含重复快照、跨测区快照或非待复核/已复核状态（如已关闭），整次拒绝，原快照保持不变。
 - npm 默认镜像无法下载或审计：显式使用 `--registry=https://registry.npmjs.org --replace-registry-host=always`。
 
 ## License

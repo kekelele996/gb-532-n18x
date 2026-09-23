@@ -41,6 +41,24 @@ func (s GapState) CanTransition(target GapState) bool {
 	return ok
 }
 
+// Schedulable reports whether a gap snapshot may join a resurvey task sheet.
+// Only snapshots awaiting review (detected) or already reviewed qualify.
+func (s GapState) Schedulable() bool {
+	return s == GapDetected || s == GapReviewed
+}
+
+// SeverityRank orders severities for resurvey scheduling; lower ranks schedule first.
+func SeverityRank(value GapSeverity) int {
+	switch value {
+	case SeverityCritical:
+		return 0
+	case SeverityMajor:
+		return 1
+	default:
+		return 2
+	}
+}
+
 func ParseGapState(value string) (GapState, error) {
 	state := GapState(value)
 	if !state.Valid() {
